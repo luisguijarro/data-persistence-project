@@ -63,10 +63,10 @@ public class GameManager : MonoBehaviour
         get { return this.gameOptions.hardCoreMode; }
     }
 
-    public int NumberOfBricksLines
+    public float NumberOfBricksLines
     {
-        set { this.gameOptions.numberOfBrickLines = value; SaveOptions(); }
-        get { return this.gameOptions.numberOfBrickLines; }
+        set { this.gameOptions.numberOfBrickLines = (int)value; SaveOptions(); }
+        get { return (float)this.gameOptions.numberOfBrickLines; }
     }
 
     public float BallVelocity
