@@ -8,15 +8,21 @@ using TMPro;
 
 public class MainMenuUI : MonoBehaviour
 {
-    private TMP_InputField inputNameField;
-    private Button startButton;
-    [SerializeField] private GameObject MainPanel;
-    [SerializeField] private GameObject OptionsPanel;
+    [SerializeField] private TMP_InputField inputNameField;
+    [SerializeField] private Button startButton;
     // Start is called before the first frame update
     void Start()
     {
-        this.inputNameField = GameObject.Find("InputNameField (TMP)").GetComponent<TMPro.TMP_InputField>();
-        this.startButton = GameObject.Find("StartButton").GetComponent<Button>();
+        //this.inputNameField = GameObject.Find("InputNameField (TMP)").GetComponent<TMPro.TMP_InputField>();
+        if (GameManager.Instance != null && this.inputNameField != null)
+        {
+            if (GameManager.Instance.currentName.Length >= 3) { this.inputNameField.text = GameManager.Instance.currentName; }
+        }
+        else
+        {
+            if (this.inputNameField == null) { Debug.Log("this.inputNameField is NULL"); }
+        }
+        //this.startButton = GameObject.Find("StartButton").GetComponent<Button>();
     }
 
     // Update is called once per frame
@@ -40,14 +46,7 @@ public class MainMenuUI : MonoBehaviour
 
     public void ShowOptions()
     {
-        this.MainPanel.SetActive(false);
-        this.OptionsPanel.SetActive(true);
-    }
-
-    public void ReturnFromOptions()
-    {
-        this.OptionsPanel.SetActive(false);
-        this.MainPanel.SetActive(true);
+        SceneManager.LoadScene(3); // Cargamos escena con el menú de opciones.
     }
 
     public void Exit()
