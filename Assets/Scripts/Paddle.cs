@@ -7,10 +7,14 @@ public class Paddle : MonoBehaviour
     public float Speed = 2.0f;
     public float MaxMovement = 2.0f;
     private MainManager mainManager;
+    private AudioSource audioSource;
+    private GameManager gameManager;
     
     // Start is called before the first frame update
     void Start()
     {
+        this.gameManager = GameManager.Instance;
+        this.audioSource = this.gameObject.GetComponent<AudioSource>();
         this.mainManager = GameObject.Find("MainManager").GetComponent<MainManager>();
     }
 
@@ -31,5 +35,14 @@ public class Paddle : MonoBehaviour
 
             transform.position = pos;
         }        
+    }
+
+    private void OnCollisionEnter(Collision other)
+    {
+        if (this.audioSource != null)
+        {
+            this.audioSource.volume = this.gameManager.SoundsVolume;
+        }
+        this.audioSource.Play();
     }
 }
