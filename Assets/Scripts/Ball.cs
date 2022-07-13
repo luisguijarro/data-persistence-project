@@ -6,10 +6,28 @@ using UnityEngine;
 public class Ball : MonoBehaviour
 {
     private Rigidbody m_Rigidbody;
+    private AudioSource audioSource;
+    private GameManager gameManager;
+    private float maxBallVelocity;
 
     void Start()
     {
+        this.gameManager = GameManager.Instance;
+        this.maxBallVelocity = (this.gameManager != null) ? this.gameManager.BallVelocity : 3.0f;
+        this.audioSource = this.gameObject.GetComponent<AudioSource>();
         m_Rigidbody = GetComponent<Rigidbody>();
+    }
+
+    private void OnCollisionEnter(Collision other) 
+    {
+        if (other.gameObject.CompareTag("Brick"))
+        {
+            if (this.audioSource != null)
+            {
+                this.audioSource.volume = this.gameManager.SoundsVolume;
+            }
+            this.audioSource.Play();
+        }
     }
     
     private void OnCollisionExit(Collision other)
@@ -26,9 +44,9 @@ public class Ball : MonoBehaviour
         }
 
         //max velocity
-        if (velocity.magnitude > 3.0f)
+        if (velocity.magnitude > this.maxBallVelocity) //3.0f)
         {
-            velocity = velocity.normalized * 3.0f;
+            velocity = velocity.normalized * this.maxBallVelocity; //3.0f;
         }
 
         m_Rigidbody.velocity = velocity;
