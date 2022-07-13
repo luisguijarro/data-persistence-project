@@ -10,8 +10,9 @@ public class GameManager : MonoBehaviour
 
     public List<PlayerScore> scoreOfPlayers;
     public GameOptions gameOptions;
+    private AudioSource audioSource;
 
-    private string currentName;
+    internal string currentName;
 
     private void Awake()
     {
@@ -23,7 +24,10 @@ public class GameManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        this.currentName = "";
+        this.audioSource = this.gameObject.GetComponent<AudioSource>();
         Instance.LoadScores();
+        Instance.LoadOptions();
     }
 
     public void SetPlayerName(string name)
@@ -42,12 +46,12 @@ public class GameManager : MonoBehaviour
 
     public bool musicOn
     {
-        set { this.gameOptions.musicOn = value; SaveOptions(); }
+        set { this.gameOptions.musicOn = value; this.audioSource.mute = !value; SaveOptions(); }
         get { return this.gameOptions.musicOn; }
     }
     public float MusicVolume
     {
-        set { this.gameOptions.musicVolume = value; SaveOptions(); }
+        set { this.gameOptions.musicVolume = value; this.audioSource.volume = value; SaveOptions(); }
         get { return this.gameOptions.musicVolume; }
     }
 
@@ -77,20 +81,45 @@ public class GameManager : MonoBehaviour
 
     #endregion
 
-    public void SaveOptions()
+    public bool SaveOptions()
     {
         string json = JsonUtility.ToJson(this.gameOptions);
-        File.WriteAllText(Application.persistentDataPath + "/saveWallOptions.json", json);
+        string path = Application.persistentDataPath + "/saveWallOptions.json";
+        File.WriteAllText(path, json);
+        return File.Exists(path);
     }
 
     public void LoadOptions()
     {
         string path = Application.persistentDataPath + "/saveWallOptions.json";
+        //File.Delete(path);
         if (File.Exists(path))
         {
             string json = File.ReadAllText(path);
             this.gameOptions = JsonUtility.FromJson<GameOptions>(json);
+            Debug.Log("Options Loaded");
         }
+        else // If dont exist we create Options file by Default.
+        {
+            this.gameOptions = new GameOptions();
+            this.gameOptions.ballVelocity = 3.0f;
+            this.gameOptions.hardCoreMode = false;
+            this.gameOptions.musicOn = true;
+            this.gameOptions.musicVolume = 0.5f;
+            this.gameOptions.numberOfBrickLines = 6;
+            this.gameOptions.soundsVolume = 0.5f;
+            if (this.SaveOptions())
+            {
+                Debug.Log("Options file has been Created");
+            }
+            else
+            {
+                Debug.Log("Options file has been not Created");
+            }
+        }
+        
+        this.audioSource.mute = !this.gameOptions.musicOn;
+        this.audioSource.volume = this.gameOptions.musicVolume;
     }
 
     public void SaveScores()
