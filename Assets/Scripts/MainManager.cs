@@ -6,6 +6,9 @@ using UnityEngine.UI;
 
 public class MainManager : MonoBehaviour
 {
+    [SerializeField] private GameObject LivesGO;
+    [SerializeField] private RawImage[] Hearts;
+    [SerializeField] private Texture[] HeartImages;
     [SerializeField] private Brick BrickPrefab;
     private int lineCount = 6;
     internal int totalBricks;
@@ -27,7 +30,7 @@ public class MainManager : MonoBehaviour
     public bool IsPaused = false;
     private Vector3 forceDir;
 
-    [SerializeField] int maxLives = 3;
+    int maxLives = 3;
     private int lives;
 
     private Vector3 initPaddlePos;
@@ -40,33 +43,54 @@ public class MainManager : MonoBehaviour
     void Start()
     {
         this.gameManager = GameManager.Instance;
-        if (this.gameManager.scoreOfPlayers.Count > 0)
+        if (this.gameManager != null)
         {
-            this.bestScoreText.GetComponent<Text>().text = "Best Score: " + 
-              this.gameManager.scoreOfPlayers[this.gameManager.scoreOfPlayers.Count-1].Score.ToString("0000");
-        }
-        else
-        {
-            this.bestScoreText.GetComponent<Text>().text = "Best Score: 0000";
+            if (this.gameManager.scoreOfPlayers.Count > 0)
+            {
+                this.bestScoreText.GetComponent<Text>().text = "Best Score: " + 
+                this.gameManager.scoreOfPlayers[this.gameManager.scoreOfPlayers.Count-1].Score.ToString("0000");
+            }
+            else
+            {
+                this.bestScoreText.GetComponent<Text>().text = "Best Score: 0000";
+            }
+            this.maxLives = (this.gameManager.HardCoreMode) ? 1 : 3;
+            this.LivesGO.SetActive(!this.gameManager.HardCoreMode);
+            this.lineCount = (int)this.gameManager.NumberOfBricksLines;
         }
 
         this.lives = maxLives;
+        this.UpdateHearts();
         this.initBallPos = Ball.gameObject.transform.position;
         this.initBallRot = Ball.gameObject.transform.rotation;
         this.initPaddlePos = Paddle.transform.position;
 
-
         const float step = 0.6f;
-        int perLine = Mathf.FloorToInt(4.0f / step);
+        int perLine = 6; //Mathf.FloorToInt(4.0f / step);
         
-        int[] pointCountArray = new [] {1,1,2,2,5,5};
-        for (int i = 0; i < lineCount; ++i)
+        int[] posiblePoints = new [] {1, 2, 5, 7, 11};
+        int[] pointCountArray = new int[6*lineCount]; // {1,1,2,2,5,5};
+        int cont = 0;
+        for (int l = 0; l < lineCount;l++)
         {
-            for (int x = 0; x < perLine; ++x)
+            int pointsToAssign = posiblePoints[Mathf.FloorToInt((l)/2f)];
+            for (int b = 0; b < 6; b++)
             {
-                Vector3 position = new Vector3(-1.5f + step * x, 2.5f + i * 0.3f, 0);
+                pointCountArray[cont] = pointsToAssign;
+                Debug.Log("Points: " + pointCountArray[cont].ToString("00"));
+                cont++;
+            }    
+        }
+
+        float initPosY = 4.3f - (lineCount * 0.3f);
+
+        for (int i = 0; i < lineCount; i++)
+        {
+            for (int x = 0; x < perLine; x++)
+            {
+                Vector3 position = new Vector3(-1.5f + step * x, /*2.5f*/initPosY + i * 0.3f, 0);
                 var brick = Instantiate(BrickPrefab, position, Quaternion.identity);
-                brick.PointValue = pointCountArray[i];
+                brick.PointValue = pointCountArray[this.totalBricks];
                 brick.onDestroyed.AddListener(AddPoint);
                 this.totalBricks++;
             }
@@ -123,7 +147,7 @@ public class MainManager : MonoBehaviour
 
     void AddPoint(int point)
     {
-        m_Points += point;
+        m_Points += (int)(point * (this.gameManager.BallVelocity / 3f));
         ScoreText.text = $"Score : {m_Points}";
         totalBricks--;
         if (totalBricks <= 0)
@@ -170,8 +194,16 @@ public class MainManager : MonoBehaviour
         }
         else
         {
-            this.Reinit();
+            this.Reinit(); // Play the next live.
         }
+        this.UpdateHearts();
+    }
+
+    private void UpdateHearts()
+    {
+        this.Hearts[2].texture = (this.lives == 3) ? this.HeartImages[1] : this.HeartImages[0];
+        this.Hearts[1].texture = (this.lives >= 2) ? this.HeartImages[1] : this.HeartImages[0];
+        this.Hearts[0].texture = (this.lives >= 1) ? this.HeartImages[1] : this.HeartImages[0];
     }
 
     private void ShowVictory()
